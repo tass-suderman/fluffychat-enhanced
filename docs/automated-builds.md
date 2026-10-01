@@ -23,6 +23,21 @@ Android requires an update to use the same signing key as the installed app.
 For your locally built debug APK, reuse the key Flutter generated in
 `~/.android/debug.keystore`. Keep a backup of that file. Do not commit it.
 
+If that file does not exist, generate a new reusable debug signing key:
+
+```sh
+mkdir -p "$HOME/.android"
+umask 077
+keytool -genkeypair -keystore "$HOME/.android/debug.keystore" \
+  -storetype JKS -alias androiddebugkey -keyalg RSA -keysize 2048 \
+  -validity 10000 -storepass android -keypass android \
+  -dname 'CN=Android Debug,O=Android,C=US'
+```
+
+An APK signed with this new key cannot update an installation signed with a
+previous key. Export your encryption keys before uninstalling the old app. Once
+installed with the new key, future local and CI builds using it can update normally.
+
 Install the GitHub CLI (`sudo pacman -S github-cli` on Arch), authenticate with
 `gh auth login`, then run this from your checkout:
 

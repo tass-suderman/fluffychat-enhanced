@@ -251,6 +251,7 @@ class Message extends StatelessWidget {
 
     return Center(
       child: MessageHoverActions(
+        alignLeft: !ownMessage,
         actions: event.redacted || !event.status.isSent || longPressSelect
             ? []
             : [

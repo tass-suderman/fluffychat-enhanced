@@ -8,10 +8,12 @@ import 'package:material_ui/material_ui.dart';
 class MessageHoverActions extends StatefulWidget {
   final Widget child;
   final List<Widget> actions;
+  final bool alignLeft;
 
   const MessageHoverActions({
     required this.child,
     required this.actions,
+    this.alignLeft = false,
     super.key,
   });
 
@@ -52,7 +54,10 @@ class _MessageHoverActionsState extends State<MessageHoverActions> {
           Offset.zero & info.childSize,
         );
         return Positioned(
-          right: info.overlaySize.width - rect.right + 8,
+          left: widget.alignLeft ? rect.left + 8 : null,
+          right: widget.alignLeft
+              ? null
+              : info.overlaySize.width - rect.right + 8,
           bottom: info.overlaySize.height - rect.top,
           child: MouseRegion(
             onEnter: (_) => _show(),
