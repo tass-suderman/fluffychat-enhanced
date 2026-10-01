@@ -8,6 +8,7 @@ import 'package:fluffychat/pages/chat/events/video_player.dart';
 import 'package:fluffychat/pages/chat_search/search_footer.dart';
 import 'package:fluffychat/pages/image_viewer/image_viewer.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
+import 'package:fluffychat/widgets/spoiler_media.dart';
 import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
@@ -109,13 +110,19 @@ class ChatSearchImagesTab extends StatelessWidget {
                   child: Material(
                     clipBehavior: Clip.hardEdge,
                     borderRadius: borderRadius,
-                    child: MxcImage(
+                    child: SpoilerMedia(
                       event: event,
                       width: 128,
                       height: 128,
-                      fit: BoxFit.cover,
-                      animated: true,
-                      isThumbnail: true,
+                      borderRadius: borderRadius,
+                      builder: (_) => MxcImage(
+                        event: event,
+                        width: 128,
+                        height: 128,
+                        fit: BoxFit.cover,
+                        animated: true,
+                        isThumbnail: true,
+                      ),
                     ),
                   ),
                 );

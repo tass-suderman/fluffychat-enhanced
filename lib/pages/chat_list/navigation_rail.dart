@@ -295,7 +295,14 @@ class _SpacesNavigationRailState extends State<SpacesNavigationRail> {
                                   index: i,
                                   child: const Padding(
                                     padding: EdgeInsets.all(4),
-                                    child: Icon(Icons.drag_handle, size: 16),
+                                    // Preserve the drag target without drawing an icon.
+                                    child: SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: ColoredBox(
+                                        color: Colors.transparent,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),

@@ -9,6 +9,7 @@ import 'package:fluffychat/pages/image_viewer/video_player.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/hover_builder.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
+import 'package:fluffychat/widgets/spoiler_media.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
 
@@ -88,7 +89,11 @@ class ImageViewerView extends StatelessWidget {
                     controller: controller.pageController,
                     itemCount: controller.allEvents.length,
                     itemBuilder: (context, i) {
-                      final event = controller.allEvents[i];
+                      final originalEvent = controller.allEvents[i];
+                      final timeline = controller.widget.timeline;
+                      final event = timeline == null
+                          ? originalEvent
+                          : originalEvent.getDisplayEvent(timeline);
                       switch (event.messageType) {
                         case MessageTypes.Video:
                           return Padding(
@@ -104,22 +109,31 @@ class ImageViewerView extends StatelessWidget {
                         case MessageTypes.Image:
                         case MessageTypes.Sticker:
                         default:
-                          return InteractiveViewer(
-                            minScale: 1.0,
-                            maxScale: 10.0,
-                            onInteractionEnd: controller.onInteractionEnds,
-                            child: Center(
-                              child: Hero(
-                                tag: event.eventId,
-                                child: GestureDetector(
-                                  // Ignore taps to not go back here:
-                                  onTap: () {},
-                                  child: MxcImage(
-                                    key: ValueKey(event.eventId),
-                                    event: event,
-                                    fit: BoxFit.contain,
-                                    isThumbnail: false,
-                                    animated: true,
+                          return SpoilerMedia(
+                            key: ValueKey(originalEvent.eventId),
+                            event: event,
+                            initiallyRevealed:
+                                originalEvent.eventId ==
+                                controller.initiallyOpenedEventId,
+                            width: 256,
+                            height: 256,
+                            builder: (context) => InteractiveViewer(
+                              minScale: 1.0,
+                              maxScale: 10.0,
+                              onInteractionEnd: controller.onInteractionEnds,
+                              child: Center(
+                                child: Hero(
+                                  tag: event.eventId,
+                                  child: GestureDetector(
+                                    // Ignore taps to not go back here:
+                                    onTap: () {},
+                                    child: MxcImage(
+                                      key: ValueKey(event.eventId),
+                                      event: event,
+                                      fit: BoxFit.contain,
+                                      isThumbnail: false,
+                                      animated: true,
+                                    ),
                                   ),
                                 ),
                               ),

@@ -9,6 +9,8 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 ### Links:
 
+- [Build and install this fork on Linux and Android](docs/automated-builds.md)
+
 - 🌐 [[Weblate] Translate FluffyChat into your language](https://hosted.weblate.org/projects/fluffychat/)
 - 🌍 [[m] Join the community](https://matrix.to/#/#fluffy-space:matrix.org)
 - 📰 [[Mastodon] Get updates on social media](https://troet.cafe/@krille)

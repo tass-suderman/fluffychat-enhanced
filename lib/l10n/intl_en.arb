@@ -2840,5 +2840,7 @@
     "hiddenSpaces": "Hidden spaces",
     "hideSpace": "Move to hidden spaces",
     "restoreSpace": "Restore space",
-    "customEmojis": "Custom emojis"
+    "customEmojis": "Custom emojis",
+    "markImageAsSpoiler": "Mark image as spoiler",
+    "revealSpoiler": "Reveal spoiler image"
 }

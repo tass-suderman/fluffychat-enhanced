@@ -15,6 +15,7 @@ import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/image_edit_geometry.dart';
 import 'package:fluffychat/pages/chat/trust_user_key_dialog.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_file_extension.dart';
+import 'package:fluffychat/utils/media_spoiler.dart';
 import 'package:fluffychat/utils/other_party_can_receive.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/utils/show_scaffold_dialog.dart';
@@ -49,6 +50,7 @@ class SendFileDialog extends StatefulWidget {
 
 class SendFileDialogState extends State<SendFileDialog> {
   bool compress = true;
+  final Set<int> _spoilerFiles = {};
 
   /// Images smaller than 20kb don't need compression.
   static const int minSizeToCompress = 20 * 1000;
@@ -77,6 +79,7 @@ class SendFileDialogState extends State<SendFileDialog> {
         result,
         mimeType: 'image/png',
         name: '$baseName.png',
+        path: '$baseName.png',
         length: result.length,
       );
     });
@@ -153,13 +156,18 @@ class SendFileDialogState extends State<SendFileDialog> {
         }
 
         final label = _labelTextController.text.trim();
+        final extraContent = mediaUploadContent(
+          label,
+          spoiler:
+              file.msgType == MessageTypes.Image && _spoilerFiles.contains(i),
+        );
 
         try {
           await widget.room.sendFileEvent(
             file,
             thumbnail: thumbnail,
             shrinkImageMaxDimension: compress ? 1600 : null,
-            extraContent: label.isEmpty ? null : {'body': label},
+            extraContent: extraContent,
             threadRootEventId: widget.threadRootEventId,
             threadLastEventId: widget.threadLastEventId,
           );
@@ -178,7 +186,9 @@ class SendFileDialogState extends State<SendFileDialog> {
             file,
             thumbnail: thumbnail,
             shrinkImageMaxDimension: compress ? 1600 : null,
-            extraContent: label.isEmpty ? null : {'body': label},
+            extraContent: extraContent,
+            threadRootEventId: widget.threadRootEventId,
+            threadLastEventId: widget.threadLastEventId,
           );
         }
       }
@@ -304,9 +314,7 @@ class SendFileDialogState extends State<SendFileDialog> {
                                         return Image.memory(
                                           bytes,
                                           height: 256,
-                                          width: _files.length == 1
-                                              ? 256 - 36
-                                              : null,
+                                          width: 256 - 36,
                                           fit: BoxFit.contain,
                                           errorBuilder: (context, e, s) {
                                             Logs().w(
@@ -327,6 +335,37 @@ class SendFileDialogState extends State<SendFileDialog> {
                                           },
                                         );
                                       },
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 4,
+                                    left: 4,
+                                    child: Material(
+                                      color: _spoilerFiles.contains(i)
+                                          ? theme.colorScheme.primary
+                                          : Colors.black54,
+                                      shape: const CircleBorder(),
+                                      child: IconButton(
+                                        tooltip: L10n.of(
+                                          context,
+                                        ).markImageAsSpoiler,
+                                        isSelected: _spoilerFiles.contains(i),
+                                        selectedIcon: const Icon(
+                                          Icons.visibility_off,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                        icon: const Icon(
+                                          Icons.visibility_off_outlined,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                        onPressed: () => setState(() {
+                                          if (!_spoilerFiles.add(i)) {
+                                            _spoilerFiles.remove(i);
+                                          }
+                                        }),
+                                      ),
                                     ),
                                   ),
                                   Positioned(

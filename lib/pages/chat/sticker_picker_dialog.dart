@@ -16,11 +16,13 @@ class StickerPickerDialog extends StatefulWidget {
   final Room room;
   final ImagePackUsage usage;
   final void Function(ImagePackImageContent) onSelected;
+  final bool showSearch;
 
   const StickerPickerDialog({
     required this.onSelected,
     required this.room,
     this.usage = ImagePackUsage.sticker,
+    this.showSearch = true,
     super.key,
   });
 
@@ -44,34 +46,35 @@ class StickerPickerDialogState extends State<StickerPickerDialog> {
         top: false,
         child: CustomScrollView(
           slivers: <Widget>[
-            SliverAppBar(
-              floating: true,
-              primary: false,
-              toolbarHeight: 72,
-              scrolledUnderElevation: 0,
-              backgroundColor: Colors.transparent,
-              automaticallyImplyLeading: false,
-              title: TextField(
-                autofocus: false,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: theme.colorScheme.secondaryContainer,
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                    borderRadius: BorderRadius.circular(99),
+            if (widget.showSearch)
+              SliverAppBar(
+                floating: true,
+                primary: false,
+                toolbarHeight: 72,
+                scrolledUnderElevation: 0,
+                backgroundColor: Colors.transparent,
+                automaticallyImplyLeading: false,
+                title: TextField(
+                  autofocus: false,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: theme.colorScheme.secondaryContainer,
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide.none,
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                    contentPadding: EdgeInsets.zero,
+                    hintText: L10n.of(context).search,
+                    hintStyle: TextStyle(
+                      color: theme.colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.normal,
+                    ),
+                    floatingLabelBehavior: FloatingLabelBehavior.never,
+                    prefixIcon: const Icon(Icons.search_outlined),
                   ),
-                  contentPadding: EdgeInsets.zero,
-                  hintText: L10n.of(context).search,
-                  hintStyle: TextStyle(
-                    color: theme.colorScheme.onPrimaryContainer,
-                    fontWeight: FontWeight.normal,
-                  ),
-                  floatingLabelBehavior: FloatingLabelBehavior.never,
-                  prefixIcon: const Icon(Icons.search_outlined),
+                  onChanged: (s) => setState(() => searchFilter = s),
                 ),
-                onChanged: (s) => setState(() => searchFilter = s),
               ),
-            ),
             if (packSlugs.isEmpty)
               SliverFillRemaining(
                 child: Center(

@@ -8,6 +8,7 @@ import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/utils/file_description.dart';
 import 'package:fluffychat/utils/url_launcher.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
+import 'package:fluffychat/widgets/spoiler_media.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:matrix/matrix.dart';
@@ -48,6 +49,17 @@ class ImageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return SpoilerMedia(
+      event: event,
+      width: width,
+      height: height,
+      borderRadius:
+          borderRadius ?? BorderRadius.circular(AppConfig.borderRadius),
+      builder: _buildImage,
+    );
+  }
+
+  Widget _buildImage(BuildContext context) {
     final theme = Theme.of(context);
 
     var borderRadius =

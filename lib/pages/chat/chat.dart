@@ -17,6 +17,7 @@ import 'package:fluffychat/pages/chat/chat_view.dart';
 import 'package:fluffychat/pages/chat/event_info_dialog.dart';
 import 'package:fluffychat/pages/chat/start_poll_bottom_sheet.dart';
 import 'package:fluffychat/pages/chat/trust_user_key_dialog.dart';
+import 'package:fluffychat/pages/chat/utils/clipboard_image.dart';
 import 'package:fluffychat/pages/chat/utils/web_file_to_x_file.dart';
 import 'package:fluffychat/pages/chat_details/chat_details.dart';
 import 'package:fluffychat/utils/adaptive_bottom_sheet.dart';
@@ -797,10 +798,11 @@ class ChatController extends State<ChatPageWithRoom>
 
   Future<void> sendImageFromClipBoard(Uint8List? image) async {
     if (image == null) return;
+    if (!mounted) return;
     await showAdaptiveDialog(
       context: context,
       builder: (c) => SendFileDialog(
-        files: [XFile.fromData(image)],
+        files: [clipboardImageFile(image)],
         room: room,
         outerContext: context,
         threadRootEventId: activeThreadId,

@@ -216,6 +216,25 @@ class ChatEventList extends StatelessWidget {
                           controller.selectedEvents.singleOrNull?.eventId ==
                           event.eventId,
                       onEdit: controller.editSelectedEventAction,
+                      onHoverEdit: controller.isArchived
+                          ? null
+                          : () {
+                              controller.clearSelectedEvents();
+                              controller.onSelectMessage(event);
+                              controller.editSelectedEventAction();
+                            },
+                      onForward: () {
+                        controller.clearSelectedEvents();
+                        controller.onSelectMessage(event);
+                        controller.forwardEventsAction();
+                      },
+                      onDelete: controller.isArchived
+                          ? null
+                          : () {
+                              controller.clearSelectedEvents();
+                              controller.onSelectMessage(event);
+                              controller.redactEventsAction();
+                            },
                       timeline: timeline,
                       displayReadMarker:
                           i > 0 &&

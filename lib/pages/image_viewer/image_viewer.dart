@@ -50,13 +50,22 @@ class ImageViewerController extends State<ImageViewer> {
             .toList() ??
         [widget.event];
     var index = allEvents.indexWhere(
-      (event) => event.eventId == widget.event.eventId,
+      (event) =>
+          event.eventId == widget.event.eventId ||
+          (widget.timeline != null &&
+              event.getDisplayEvent(widget.timeline!).eventId ==
+                  widget.event.eventId),
     );
-    if (index < 0) index = 0;
+    if (index < 0) {
+      allEvents.add(widget.event);
+      index = allEvents.length - 1;
+    }
+    initiallyOpenedEventId = allEvents[index].eventId;
     pageController = PageController(initialPage: index);
   }
 
   late final PageController pageController;
+  late final String initiallyOpenedEventId;
 
   late final List<Event> allEvents;
 
@@ -91,7 +100,11 @@ class ImageViewerController extends State<ImageViewer> {
 
   int get _index => pageController.page?.toInt() ?? 0;
 
-  Event get currentEvent => allEvents[_index];
+  Event get currentEvent {
+    final event = allEvents[_index];
+    final timeline = widget.timeline;
+    return timeline == null ? event : event.getDisplayEvent(timeline);
+  }
 
   bool get canGoNext => _index < allEvents.length - 1;
 
