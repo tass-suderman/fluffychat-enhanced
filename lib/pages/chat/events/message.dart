@@ -743,7 +743,7 @@ class Message extends StatelessWidget {
                                                                     Tab(
                                                                       text: L10n.of(
                                                                         context,
-                                                                      ).stickers,
+                                                                      ).customEmojis,
                                                                     ),
                                                                   ],
                                                                 ),

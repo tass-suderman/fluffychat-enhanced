@@ -2830,5 +2830,15 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "chatSorting": "Chat sorting",
+    "sortUnreadFirst": "Sort unread chats first",
+    "sortMutedUnreadFirst": "Include muted unread chats in unread sorting",
+    "sortMutedUnreadFirstDescription": "Also move muted unread chats to the top when unread sorting is enabled.",
+    "pinFavorites": "Pin favorites at the top",
+    "lowPriorityLast": "Keep low priority chats at the bottom",
+    "hiddenSpaces": "Hidden spaces",
+    "hideSpace": "Move to hidden spaces",
+    "restoreSpace": "Restore space",
+    "customEmojis": "Custom emojis"
 }

@@ -11,12 +11,14 @@ import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_list/chat_list_view.dart';
+import 'package:fluffychat/utils/chat_sorting.dart';
 import 'package:fluffychat/utils/error_reporter.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/matrix_locals.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/utils/show_scaffold_dialog.dart';
 import 'package:fluffychat/utils/show_update_snackbar.dart';
+import 'package:fluffychat/utils/space_order.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_modal_action_popup.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_ok_cancel_alert_dialog.dart';
 import 'package:fluffychat/widgets/adaptive_dialogs/show_text_input_dialog.dart';
@@ -85,6 +87,7 @@ class ChatListController extends State<ChatList>
   String? activeTag;
 
   String? _activeSpaceId;
+  List<Room> visibleSpaceChats = [];
 
   String? get activeSpaceId => _activeSpaceId;
 
@@ -98,11 +101,13 @@ class ChatListController extends State<ChatList>
 
     setState(() {
       _activeSpaceId = spaceId;
+      visibleSpaceChats = [];
     });
   }
 
   void clearActiveSpace() => setState(() {
     _activeSpaceId = null;
+    visibleSpaceChats = [];
   });
 
   void _onCallEvent(CallEvent? event) {
@@ -177,9 +182,82 @@ class ChatListController extends State<ChatList>
     }
   }
 
-  List<Room> get filteredRooms => Matrix.of(
-    context,
-  ).client.rooms.where(getRoomFilterByActiveFilter(activeFilter)).toList();
+  List<Room> get filteredRooms => sortChats(
+    Matrix.of(
+      context,
+    ).client.rooms.where(getRoomFilterByActiveFilter(activeFilter)),
+    (room) => room,
+    byActivity: true,
+  );
+
+  bool _handleNavigationKey(KeyEvent event) {
+    if (!mounted ||
+        ModalRoute.of(context)?.isCurrent == false ||
+        event is! KeyDownEvent) {
+      return false;
+    }
+    final keyboard = HardwareKeyboard.instance;
+    if (keyboard.isShiftPressed || keyboard.isMetaPressed) return false;
+    if (keyboard.isControlPressed &&
+        !keyboard.isAltPressed &&
+        event.logicalKey == LogicalKeyboardKey.keyK) {
+      clearActiveSpace();
+      startSearch();
+      if (scrollController.hasClients) scrollController.jumpTo(0);
+      return true;
+    }
+    if (!keyboard.isAltPressed ||
+        (event.logicalKey != LogicalKeyboardKey.arrowUp &&
+            event.logicalKey != LogicalKeyboardKey.arrowDown)) {
+      return false;
+    }
+    final direction = event.logicalKey == LogicalKeyboardKey.arrowUp ? -1 : 1;
+    if (keyboard.isControlPressed) {
+      final hidden = AppSettings.hiddenSpaces.value;
+      final ids = <String?>[
+        null,
+        ...spaces
+            .where(
+              (room) => !hidden.contains('${room.client.userID}|${room.id}'),
+            )
+            .map((room) => room.id),
+      ];
+      final index = ids.indexOf(activeSpaceId);
+      final next = ids[(index + direction) % ids.length];
+      if (next == null) {
+        clearActiveSpace();
+      } else {
+        setActiveSpace(next);
+      }
+    } else {
+      final rooms = activeSpaceId != null
+          ? visibleSpaceChats
+          : filteredRooms
+                .where(
+                  (room) =>
+                      !room.isSpace &&
+                      room.getLocalizedDisplayname().toLowerCase().contains(
+                        searchController.text.trim().toLowerCase(),
+                      ) &&
+                      (!AppSettings.hideRoomsInSpaces.value ||
+                          !spaces.any(
+                            (space) => space.spaceChildren.any(
+                              (child) => child.roomId == room.id,
+                            ),
+                          )),
+                )
+                .toList();
+      if (rooms.isEmpty) return true;
+      final index = rooms.indexWhere((room) => room.id == activeChat);
+      onChatTap(
+        rooms[(index < 0
+                ? (direction > 0 ? 0 : rooms.length - 1)
+                : index + direction) %
+            rooms.length],
+      );
+    }
+    return true;
+  }
 
   bool isSearchMode = false;
   Future<QueryPublicRoomsResponse>? publicRoomsResponse;
@@ -346,8 +424,7 @@ class ChatListController extends State<ChatList>
   }
 
   // Needs to match GroupsSpacesEntry for 'separate group' checking.
-  List<Room> get spaces =>
-      Matrix.of(context).client.rooms.where((r) => r.isSpace).toList();
+  List<Room> get spaces => orderedSpaces(Matrix.of(context).client.rooms);
 
   String? get activeChat => widget.activeChat;
 
@@ -411,6 +488,7 @@ class ChatListController extends State<ChatList>
 
   @override
   void initState() {
+    HardwareKeyboard.instance.addHandler(_handleNavigationKey);
     _initReceiveSharingIntent();
     _activeSpaceId = widget.activeSpace;
 
@@ -476,6 +554,7 @@ class ChatListController extends State<ChatList>
 
   @override
   void dispose() {
+    HardwareKeyboard.instance.removeHandler(_handleNavigationKey);
     _intentDataStreamSubscription?.cancel();
     _intentFileStreamSubscription?.cancel();
     _callEventSubscription?.cancel();

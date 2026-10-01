@@ -35,6 +35,24 @@ class SettingsChatView extends StatelessWidget {
         child: MaxWidthBody(
           child: Column(
             children: [
+              ListTile(title: Text(L10n.of(context).chatSorting)),
+              SettingsSwitchListTile.adaptive(
+                title: L10n.of(context).sortUnreadFirst,
+                setting: AppSettings.sortUnreadFirst,
+              ),
+              SettingsSwitchListTile.adaptive(
+                title: L10n.of(context).sortMutedUnreadFirst,
+                setting: AppSettings.sortMutedUnreadFirst,
+                subtitle: L10n.of(context).sortMutedUnreadFirstDescription,
+              ),
+              SettingsSwitchListTile.adaptive(
+                title: L10n.of(context).pinFavorites,
+                setting: AppSettings.pinFavorites,
+              ),
+              SettingsSwitchListTile.adaptive(
+                title: L10n.of(context).lowPriorityLast,
+                setting: AppSettings.lowPriorityLast,
+              ),
               SettingsSwitchListTile.adaptive(
                 title: L10n.of(context).formattedMessages,
                 subtitle: L10n.of(context).formattedMessagesDescription,

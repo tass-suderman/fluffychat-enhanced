@@ -31,12 +31,17 @@ class SettingsSwitchListTileState extends State<SettingsSwitchListTile> {
   Widget build(BuildContext context) {
     final subtitle = widget.subtitle;
     return SwitchListTile.adaptive(
-      value: widget.setting.value ?? widget.defaultValue ?? false,
+      value:
+          widget.setting.value ??
+          widget.defaultValue ??
+          widget.setting.defaultValue ??
+          false,
       title: Text(widget.title),
       subtitle: subtitle == null ? null : Text(subtitle),
       onChanged: (bool newValue) async {
-        widget.onChanged?.call(newValue);
         await widget.setting.setItem(newValue);
+        widget.onChanged?.call(newValue);
+        if (!mounted) return;
         setState(() {});
       },
     );

@@ -194,6 +194,7 @@ class ChatController extends State<ChatPageWithRoom>
   String pendingText = '';
 
   bool showEmojiPicker = false;
+  int emojiPickerTab = 0;
 
   String? get threadLastEventId {
     final threadId = activeThreadId;
@@ -333,7 +334,23 @@ class ChatController extends State<ChatPageWithRoom>
   }
 
   KeyEventResult _customEnterKeyHandling(FocusNode node, KeyEvent evt) {
+    final keyboard = HardwareKeyboard.instance;
     if (evt is KeyDownEvent &&
+        keyboard.isControlPressed &&
+        !keyboard.isAltPressed &&
+        !keyboard.isShiftPressed &&
+        (evt.logicalKey == LogicalKeyboardKey.keyE ||
+            evt.logicalKey == LogicalKeyboardKey.keyS)) {
+      inputFocus.unfocus();
+      setState(() {
+        emojiPickerTab = evt.logicalKey == LogicalKeyboardKey.keyS ? 1 : 0;
+        showEmojiPicker = true;
+      });
+      return KeyEventResult.handled;
+    }
+    if (evt is KeyDownEvent &&
+        !keyboard.isAltPressed &&
+        !keyboard.isControlPressed &&
         evt.logicalKey == LogicalKeyboardKey.arrowUp &&
         !PlatformInfos.isMobile &&
         editEvent == null &&
@@ -990,6 +1007,35 @@ class ChatController extends State<ChatPageWithRoom>
       replyEvent = null;
     });
     return;
+  }
+
+  Future<void> sendSticker(ImagePackImageContent sticker) async {
+    final reply = replyEvent;
+    final proceed = await showTrustUserInRoomDialog(context, room);
+    if (!mounted || !proceed) return;
+    try {
+      await room.sendEvent(
+        {
+          'body': sticker.body,
+          'info': sticker.info ?? {},
+          'url': sticker.url.toString(),
+        },
+        type: EventTypes.Sticker,
+        inReplyTo: reply,
+        threadRootEventId: activeThreadId,
+        threadLastEventId: threadLastEventId,
+      );
+      if (!mounted) return;
+      setState(() {
+        if (replyEvent == reply) replyEvent = null;
+        showEmojiPicker = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.toLocalizedString(context))));
+    }
   }
 
   void hideEmojiPicker() {

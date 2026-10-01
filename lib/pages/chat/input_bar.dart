@@ -16,10 +16,9 @@ import 'package:matrix/matrix.dart';
 import 'package:slugify/slugify.dart';
 
 import '../../widgets/avatar.dart';
-import '../../widgets/matrix.dart';
 import 'command_hints.dart';
 
-class InputBar extends StatelessWidget {
+class InputBar extends StatefulWidget {
   final Room room;
   final int? minLines;
   final int? maxLines;
@@ -327,7 +326,7 @@ class InputBar extends StatelessWidget {
     var startText = '';
     final afterText = replaceText == controller!.text
         ? ''
-        : controller!.text.substring(controller!.selection.baseOffset + 1);
+        : controller!.text.substring(controller!.selection.baseOffset);
     var insertText = '';
     if (suggestion['type'] == 'command') {
       insertText = '${suggestion['name']!} ';
@@ -364,7 +363,10 @@ class InputBar extends StatelessWidget {
       }
       insertText = ':${isUnique ? '' : '${insertPack!}~'}$insertEmote: ';
       startText = replaceText.replaceAllMapped(
-        RegExp(r'(\s|^)(:(?:[-\w]+~)?[-\w]+)$'),
+        RegExp(
+          r'(\s|^)(:(?:[\p{L}\p{N}_-]+~)?[\p{L}\p{N}_-]+)$',
+          unicode: true,
+        ),
         (Match m) => '${m[1]}$insertText',
       );
     }
@@ -387,89 +389,251 @@ class InputBar extends StatelessWidget {
   }
 
   @override
+  State<InputBar> createState() => _InputBarState();
+}
+
+class _InputBarState extends State<InputBar> {
+  FocusNode? _inputFocus;
+  KeyEventResult Function(FocusNode, KeyEvent)? _previousKeyHandler;
+  VoidCallback? _submitSuggestion;
+  void Function(Map<String, String?>)? _selectOption;
+  List<Map<String, String?>> _options = [];
+  Iterable<Map<String, String?>>? _optionsSource;
+  bool _optionsVisible = false;
+  bool _disposing = false;
+  int? _completionOffset;
+  final _pointerIndex = ValueNotifier<int?>(null);
+
+  void _attachFocus(FocusNode node) {
+    if (_inputFocus == node) return;
+    _detachFocus();
+    _inputFocus = node;
+    _previousKeyHandler = node.onKeyEvent;
+    node.onKeyEvent = _handleKey;
+  }
+
+  void _detachFocus() {
+    if (_inputFocus?.onKeyEvent == _handleKey) {
+      _inputFocus?.onKeyEvent = _previousKeyHandler;
+    }
+    _inputFocus = null;
+  }
+
+  KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
+    final keyboard = HardwareKeyboard.instance;
+    if (_optionsVisible &&
+        !keyboard.isControlPressed &&
+        !keyboard.isAltPressed &&
+        !keyboard.isMetaPressed &&
+        !keyboard.isShiftPressed &&
+        (event is KeyDownEvent || event is KeyRepeatEvent)) {
+      if (event.logicalKey == LogicalKeyboardKey.arrowUp ||
+          event.logicalKey == LogicalKeyboardKey.arrowDown) {
+        _pointerIndex.value = null;
+        return KeyEventResult.ignored;
+      }
+      if (event.logicalKey == LogicalKeyboardKey.enter ||
+          event.logicalKey == LogicalKeyboardKey.numpadEnter) {
+        if (event is KeyDownEvent) {
+          final hovered = _pointerIndex.value;
+          if (hovered != null && hovered < _options.length) {
+            _selectOption?.call(_options[hovered]);
+          } else {
+            _submitSuggestion?.call();
+          }
+        }
+        return KeyEventResult.handled;
+      }
+    }
+    return _previousKeyHandler?.call(node, event) ?? KeyEventResult.ignored;
+  }
+
+  @override
+  void dispose() {
+    _disposing = true;
+    _detachFocus();
+    _pointerIndex.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Autocomplete<Map<String, String?>>(
       key: Key('chat_input_field'),
-      focusNode: focusNode,
-      textEditingController: controller,
-      optionsBuilder: getSuggestions,
-      fieldViewBuilder: (context, controller, focusNode, _) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(
-          textScaler: TextScaler.linear(AppSettings.fontSizeFactor.value),
-        ),
-        child: TextField(
-          controller: controller,
-          focusNode: focusNode,
-          readOnly: readOnly,
-          onEditingComplete: () {
-            // To not lose focus on iOS:
-            // https://github.com/krille-chan/fluffychat/issues/2784
-          },
-          contextMenuBuilder: (c, e) => MarkdownContextBuilder(
-            editableTextState: e,
+      focusNode: widget.focusNode,
+      textEditingController: widget.controller,
+      optionsBuilder: widget.getSuggestions,
+      fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+        _attachFocus(focusNode);
+        _submitSuggestion = onFieldSubmitted;
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(AppSettings.fontSizeFactor.value),
+          ),
+          child: TextField(
             controller: controller,
-          ),
-          contentInsertionConfiguration: ContentInsertionConfiguration(
-            onContentInserted: (KeyboardInsertedContent content) async {
-              final proceed = await showTrustUserInRoomDialog(context, room);
-              if (!proceed) return;
-              final data = content.data;
-              if (data == null) return;
-
-              final file = MatrixFile(
-                mimeType: content.mimeType,
-                bytes: data,
-                name: content.uri.split('/').last,
-              );
-              room.sendFileEvent(file, shrinkImageMaxDimension: 1600);
+            focusNode: focusNode,
+            readOnly: widget.readOnly,
+            onEditingComplete: () {
+              // To not lose focus on iOS:
+              // https://github.com/krille-chan/fluffychat/issues/2784
             },
-          ),
-          minLines: minLines,
-          maxLines: maxLines,
-          keyboardType: keyboardType,
-          textInputAction: textInputAction,
-          autofocus: autofocus!,
-          inputFormatters: [
-            LengthLimitingTextInputFormatter((maxPDUSize / 3).floor()),
-          ],
-          onSubmitted: (text) {
-            // fix for library for now
-            // it sets the types for the callback incorrectly
-            onSubmitted!(text);
-          },
-          maxLength: AppSettings.textMessageMaxLength.value,
-          decoration: decoration,
-          onChanged: (text) {
-            // fix for the library for now
-            // it sets the types for the callback incorrectly
-            onChanged!(text);
-          },
-          textCapitalization: TextCapitalization.sentences,
-        ),
-      ),
-      optionsViewBuilder: (c, onSelected, s) {
-        final suggestions = s.toList();
-        return Material(
-          elevation: theme.appBarTheme.scrolledUnderElevation ?? 4,
-          shadowColor: theme.appBarTheme.shadowColor,
-          borderRadius: BorderRadius.circular(AppConfig.borderRadius),
-          clipBehavior: Clip.hardEdge,
-          child: ListView.builder(
-            padding: EdgeInsets.zero,
-            shrinkWrap: true,
-            itemCount: suggestions.length,
-            itemBuilder: (context, i) => buildSuggestion(
-              c,
-              suggestions[i],
-              onSelected,
-              Matrix.of(context).client,
+            contextMenuBuilder: (c, e) => MarkdownContextBuilder(
+              editableTextState: e,
+              controller: controller,
             ),
+            contentInsertionConfiguration: ContentInsertionConfiguration(
+              onContentInserted: (KeyboardInsertedContent content) async {
+                final proceed = await showTrustUserInRoomDialog(
+                  context,
+                  widget.room,
+                );
+                if (!proceed) return;
+                final data = content.data;
+                if (data == null) return;
+
+                final file = MatrixFile(
+                  mimeType: content.mimeType,
+                  bytes: data,
+                  name: content.uri.split('/').last,
+                );
+                widget.room.sendFileEvent(file, shrinkImageMaxDimension: 1600);
+              },
+            ),
+            minLines: widget.minLines,
+            maxLines: widget.maxLines,
+            keyboardType: widget.keyboardType,
+            textInputAction: widget.textInputAction,
+            autofocus: widget.autofocus ?? false,
+            inputFormatters: [
+              LengthLimitingTextInputFormatter((maxPDUSize / 3).floor()),
+            ],
+            onSubmitted: (text) {
+              // fix for library for now
+              // it sets the types for the callback incorrectly
+              if (_optionsVisible) {
+                onFieldSubmitted();
+              } else {
+                widget.onSubmitted?.call(text);
+              }
+            },
+            maxLength: AppSettings.textMessageMaxLength.value,
+            decoration: widget.decoration,
+            onChanged: (text) {
+              // fix for the library for now
+              // it sets the types for the callback incorrectly
+              widget.onChanged?.call(text);
+            },
+            textCapitalization: TextCapitalization.sentences,
           ),
         );
       },
-      displayStringForOption: insertSuggestion,
+      optionsViewBuilder: (c, onSelected, s) {
+        if (!identical(_optionsSource, s)) {
+          _pointerIndex.value = null;
+        }
+        _optionsSource = s;
+        _options = s.toList();
+        _selectOption = onSelected;
+        return _SuggestionList(
+          onVisibilityChanged: (visible) {
+            _optionsVisible = visible;
+            if (!visible && !_disposing) _pointerIndex.value = null;
+          },
+          child: ValueListenableBuilder<int?>(
+            valueListenable: _pointerIndex,
+            builder: (context, hovered, _) {
+              final highlighted =
+                  hovered ?? AutocompleteHighlightedOption.of(c);
+              return Material(
+                elevation: theme.appBarTheme.scrolledUnderElevation ?? 4,
+                shadowColor: theme.appBarTheme.shadowColor,
+                borderRadius: BorderRadius.circular(AppConfig.borderRadius),
+                clipBehavior: Clip.hardEdge,
+                child: ListView.builder(
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  itemCount: _options.length,
+                  itemBuilder: (context, i) => Builder(
+                    builder: (rowContext) {
+                      if (i == highlighted) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (rowContext.mounted) {
+                            Scrollable.ensureVisible(
+                              rowContext,
+                              alignment: 0.5,
+                            );
+                          }
+                        });
+                      }
+                      return MouseRegion(
+                        onEnter: (_) => _pointerIndex.value = i,
+                        child: Material(
+                          color: i == highlighted
+                              ? theme.colorScheme.secondaryContainer
+                              : Colors.transparent,
+                          child: widget.buildSuggestion(
+                            c,
+                            _options[i],
+                            onSelected,
+                            widget.room.client,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+      displayStringForOption: (option) {
+        final value = widget.controller!.value;
+        final completed = widget.insertSuggestion(option);
+        _completionOffset =
+            completed.length - (value.text.length - value.selection.baseOffset);
+        return completed;
+      },
+      onSelected: (_) {
+        _optionsVisible = false;
+        final offset = _completionOffset;
+        if (offset != null) {
+          widget.controller!.selection = TextSelection.collapsed(
+            offset: offset,
+          );
+        }
+      },
       optionsViewOpenDirection: OptionsViewOpenDirection.up,
     );
   }
+}
+
+class _SuggestionList extends StatefulWidget {
+  final Widget child;
+  final ValueChanged<bool> onVisibilityChanged;
+  const _SuggestionList({
+    required this.child,
+    required this.onVisibilityChanged,
+  });
+  @override
+  State<_SuggestionList> createState() => _SuggestionListState();
+}
+
+class _SuggestionListState extends State<_SuggestionList> {
+  @override
+  void initState() {
+    super.initState();
+    widget.onVisibilityChanged(true);
+  }
+
+  @override
+  void dispose() {
+    widget.onVisibilityChanged(false);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

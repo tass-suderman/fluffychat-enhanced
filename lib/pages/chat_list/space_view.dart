@@ -11,6 +11,7 @@ import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_list/active_call_indicator.dart';
 import 'package:fluffychat/pages/chat_list/unread_bubble.dart';
+import 'package:fluffychat/utils/chat_sorting.dart';
 import 'package:fluffychat/utils/localized_exception_extension.dart';
 import 'package:fluffychat/utils/matrix_live_kit_calls/matrix_live_kit_call.dart';
 import 'package:fluffychat/utils/stream_extension.dart';
@@ -41,12 +42,14 @@ class SpaceView extends StatefulWidget {
   final void Function() onBack;
   final void Function(Room room) onChatTab;
   final String? activeChat;
+  final void Function(List<Room>)? onVisibleChatsChanged;
 
   const SpaceView({
     required this.spaceId,
     required this.onBack,
     required this.onChatTab,
     required this.activeChat,
+    this.onVisibleChatsChanged,
     super.key,
   });
 
@@ -383,6 +386,28 @@ class _SpaceViewState extends State<SpaceView> {
                   .rateLimit(const Duration(seconds: 1)),
               builder: (context, snapshot) {
                 final filter = _filterController.text.trim().toLowerCase();
+                final children = sortChats(
+                  _discoveredChildren,
+                  (item) => room.client.getRoomById(item.roomId),
+                  byActivity: true,
+                );
+                widget.onVisibleChatsChanged?.call(
+                  children
+                      .where((item) {
+                        final joined = room.client.getRoomById(item.roomId);
+                        final name =
+                            item.name ??
+                            item.canonicalAlias ??
+                            joined?.getLocalizedDisplayname() ??
+                            L10n.of(context).emptyChat;
+                        return joined != null &&
+                            !joined.isSpace &&
+                            joined.membership != Membership.leave &&
+                            name.toLowerCase().contains(filter);
+                      })
+                      .map((item) => room.client.getRoomById(item.roomId)!)
+                      .toList(),
+                );
                 return CustomScrollView(
                   slivers: [
                     SliverAppBar(
@@ -467,9 +492,9 @@ class _SpaceViewState extends State<SpaceView> {
                       ),
                     ),
                     SliverList.builder(
-                      itemCount: _discoveredChildren.length + 1,
+                      itemCount: children.length + 1,
                       itemBuilder: (context, i) {
-                        if (i == _discoveredChildren.length) {
+                        if (i == children.length) {
                           if (_noMoreRooms) {
                             return const SizedBox.shrink();
                           }
@@ -486,7 +511,7 @@ class _SpaceViewState extends State<SpaceView> {
                             ),
                           );
                         }
-                        final item = _discoveredChildren[i];
+                        final item = children[i];
                         var joinedRoom = room.client.getRoomById(item.roomId);
                         final displayname =
                             item.name ??

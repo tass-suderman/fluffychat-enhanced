@@ -40,6 +40,7 @@ class ChatListViewBody extends StatelessWidget {
         onBack: controller.clearActiveSpace,
         onChatTab: controller.onChatTap,
         activeChat: controller.activeChat,
+        onVisibleChatsChanged: (rooms) => controller.visibleSpaceChats = rooms,
       );
     }
     final spaces = client.rooms.where((r) => r.isSpace);
