@@ -18,6 +18,7 @@ import 'package:matrix/matrix.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/custom_scroll_behaviour.dart';
+import '../utils/desktop_tray.dart';
 import 'matrix.dart';
 
 class FluffyChatApp extends StatelessWidget {
@@ -82,17 +83,19 @@ class FluffyChatApp extends StatelessWidget {
         ],
         supportedLocales: L10n.supportedLocales,
         routerConfig: router,
-        builder: (context, child) => AppLockWidget(
-          pincode: appLockSettings.pincode,
-          useBiometrics: appLockSettings.useBiometrics,
-          isLoggedIn: clients.any((client) => client.isLogged()),
-          // Need a navigator above the Matrix widget for
-          // displaying dialogs
-          child: Matrix(
-            clients: clients,
-            store: store,
-            child: CallOverlay(
-              child: testWidget ?? child ?? const SizedBox.shrink(),
+        builder: (context, child) => DesktopTrayLifecycle(
+          child: AppLockWidget(
+            pincode: appLockSettings.pincode,
+            useBiometrics: appLockSettings.useBiometrics,
+            isLoggedIn: clients.any((client) => client.isLogged()),
+            // Need a navigator above the Matrix widget for
+            // displaying dialogs
+            child: Matrix(
+              clients: clients,
+              store: store,
+              child: CallOverlay(
+                child: testWidget ?? child ?? const SizedBox.shrink(),
+              ),
             ),
           ),
         ),

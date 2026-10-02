@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import 'package:fluffychat/config/app_config.dart';
+import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat_list/active_call_indicator.dart';
 import 'package:fluffychat/pages/chat_list/unread_bubble.dart';
@@ -66,7 +67,11 @@ class ChatListItem extends StatelessWidget {
     final needLastEventSender =
         lastEvent != null &&
         room.getState(EventTypes.RoomMember, lastEvent.senderId) == null;
-    final space = this.space;
+    final space =
+        AppSettings.hideSpaceAvatars.value ||
+            (isDirectChat && AppSettings.hideSpaceAvatarsInDirectChats.value)
+        ? null
+        : this.space;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),

@@ -80,8 +80,12 @@ class Avatar extends StatelessWidget {
               client: client,
               borderRadius: borderRadius,
               key: ValueKey(mxContent.toString()),
-              cacheKey: '${mxContent}_$size',
+              cacheKey: '${mxContent}_${size}_original',
               uri: mxContent,
+              // Homeservers may flatten animated thumbnails even when asked
+              // for animation. Use the cached original to preserve its frames.
+              isThumbnail: false,
+              animated: true,
               fit: BoxFit.cover,
               width: size,
               height: size,

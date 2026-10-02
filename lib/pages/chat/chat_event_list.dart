@@ -16,8 +16,9 @@ import 'package:fluffychat/pages/chat/typing_indicators.dart';
 import 'package:fluffychat/utils/account_config.dart';
 import 'package:fluffychat/utils/matrix_sdk_extensions/filtered_timeline_extension.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
+import 'package:fluffychat/utils/read_receipt_positions.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:matrix/matrix_api_lite/model/event_types.dart';
+import 'package:matrix/matrix.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
 
 import '../../config/app_config.dart';
@@ -35,6 +36,22 @@ class ChatEventList extends StatelessWidget {
     if (timeline == null) {
       return const Center(child: CupertinoActivityIndicator());
     }
+    if (!AppSettings.showReadReceiptsBesideMessages.value) {
+      return _buildTimeline(context, timeline);
+    }
+    return StreamBuilder<SyncUpdate>(
+      stream: controller.room.client.onSync.stream.where(
+        (sync) =>
+            sync.rooms?.join?[controller.room.id]?.ephemeral?.any(
+              (event) => event.type == 'm.receipt',
+            ) ??
+            false,
+      ),
+      builder: (context, _) => _buildTimeline(context, timeline),
+    );
+  }
+
+  Widget _buildTimeline(BuildContext context, Timeline timeline) {
     final theme = Theme.of(context);
 
     final colors = [theme.secondaryBubbleColor, theme.bubbleColor];
@@ -44,6 +61,16 @@ class ChatEventList extends StatelessWidget {
     final events = timeline.events.filterByVisibleInGui(
       threadId: controller.activeThreadId,
     );
+
+    final inlineReceipts = AppSettings.showReadReceiptsBesideMessages.value;
+    final readers = inlineReceipts
+        ? readReceiptPositions(
+            controller.room,
+            events,
+            timeline.events,
+            threadId: controller.activeThreadId,
+          )
+        : <String, List<User>>{};
 
     // create a map of eventId --> index to greatly improve performance of
     // ListView's findChildIndexCallback
@@ -95,7 +122,8 @@ class ChatEventList extends StatelessWidget {
                 return Column(
                   mainAxisSize: .min,
                   children: [
-                    if (events.isNotEmpty) SeenByRow(event: events.first),
+                    if (!inlineReceipts && events.isNotEmpty)
+                      SeenByRow(event: events.first),
                     TypingIndicators(controller),
                     EncryptionInfo(room: controller.room),
                   ],
@@ -257,6 +285,8 @@ class ChatEventList extends StatelessWidget {
                             )
                           : null,
                     ),
+                    if (readers[event.eventId]?.isNotEmpty == true)
+                      SeenByRow(event: event, users: readers[event.eventId]),
                   ],
                 ),
               );

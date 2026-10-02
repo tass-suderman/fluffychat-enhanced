@@ -6,6 +6,7 @@
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'media_viewer_back_handler.dart';
 import 'mxc_image.dart';
 
 class MxcImageViewer extends StatelessWidget {
@@ -19,41 +20,43 @@ class MxcImageViewer extends StatelessWidget {
       backgroundColor: Colors.black.withAlpha(200),
       foregroundColor: Colors.white,
     );
-    return GestureDetector(
-      onTap: () => Navigator.of(context).pop(),
-      child: Scaffold(
-        backgroundColor: Colors.black.withAlpha(128),
-        extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          elevation: 0,
-          leading: IconButton(
-            style: iconButtonStyle,
-            icon: const Icon(Icons.close),
-            onPressed: Navigator.of(context).pop,
-            color: Colors.white,
-            tooltip: L10n.of(context).close,
+    return MediaViewerBackHandler(
+      child: GestureDetector(
+        onTap: () => Navigator.of(context).pop(),
+        child: Scaffold(
+          backgroundColor: Colors.black.withAlpha(128),
+          extendBodyBehindAppBar: true,
+          appBar: AppBar(
+            elevation: 0,
+            leading: IconButton(
+              style: iconButtonStyle,
+              icon: const Icon(Icons.close),
+              onPressed: Navigator.of(context).pop,
+              color: Colors.white,
+              tooltip: L10n.of(context).close,
+            ),
+            backgroundColor: Colors.transparent,
           ),
-          backgroundColor: Colors.transparent,
-        ),
-        body: InteractiveViewer(
-          minScale: 1.0,
-          maxScale: 10.0,
-          onInteractionEnd: (endDetails) {
-            if (endDetails.velocity.pixelsPerSecond.dy >
-                MediaQuery.sizeOf(context).height * 1.5) {
-              Navigator.of(context, rootNavigator: false).pop();
-            }
-          },
-          child: Center(
-            child: GestureDetector(
-              // Ignore taps to not go back here:
-              onTap: () {},
-              child: MxcImage(
-                key: ValueKey(mxContent.toString()),
-                uri: mxContent,
-                fit: BoxFit.contain,
-                isThumbnail: false,
-                animated: true,
+          body: InteractiveViewer(
+            minScale: 1.0,
+            maxScale: 10.0,
+            onInteractionEnd: (endDetails) {
+              if (endDetails.velocity.pixelsPerSecond.dy >
+                  MediaQuery.sizeOf(context).height * 1.5) {
+                Navigator.of(context, rootNavigator: false).pop();
+              }
+            },
+            child: Center(
+              child: GestureDetector(
+                // Ignore taps to not go back here:
+                onTap: () {},
+                child: MxcImage(
+                  key: ValueKey(mxContent.toString()),
+                  uri: mxContent,
+                  fit: BoxFit.contain,
+                  isThumbnail: false,
+                  animated: true,
+                ),
               ),
             ),
           ),

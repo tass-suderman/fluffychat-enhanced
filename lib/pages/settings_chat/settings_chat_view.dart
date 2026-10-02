@@ -8,6 +8,7 @@ import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/adaptive_bottom_sheet.dart';
+import 'package:fluffychat/utils/desktop_tray.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/layouts/max_width_body.dart';
 import 'package:fluffychat/widgets/settings_switch_list_tile.dart';
@@ -35,6 +36,16 @@ class SettingsChatView extends StatelessWidget {
         child: MaxWidthBody(
           child: Column(
             children: [
+              if (PlatformInfos.isDesktop)
+                SettingsSwitchListTile.adaptive(
+                  title: L10n.of(context).closeToTray,
+                  subtitle: L10n.of(context).closeToTrayDescription,
+                  setting: AppSettings.closeToTray,
+                  onChanged: (_) async {
+                    await updateDesktopTray(context);
+                    if (context.mounted) controller.updateState();
+                  },
+                ),
               ListTile(title: Text(L10n.of(context).chatSorting)),
               SettingsSwitchListTile.adaptive(
                 title: L10n.of(context).sortUnreadFirst,
@@ -66,6 +77,25 @@ class SettingsChatView extends StatelessWidget {
               SettingsSwitchListTile.adaptive(
                 title: L10n.of(context).hideRoomsInSpaces,
                 setting: AppSettings.hideRoomsInSpaces,
+              ),
+              SettingsSwitchListTile.adaptive(
+                title: L10n.of(context).showReadReceiptsBesideMessages,
+                subtitle: L10n.of(
+                  context,
+                ).showReadReceiptsBesideMessagesDescription,
+                setting: AppSettings.showReadReceiptsBesideMessages,
+              ),
+              SettingsSwitchListTile.adaptive(
+                title: L10n.of(context).hideSpaceAvatars,
+                subtitle: L10n.of(context).hideSpaceAvatarsDescription,
+                setting: AppSettings.hideSpaceAvatars,
+              ),
+              SettingsSwitchListTile.adaptive(
+                title: L10n.of(context).hideSpaceAvatarsInDirectChats,
+                subtitle: L10n.of(
+                  context,
+                ).hideSpaceAvatarsInDirectChatsDescription,
+                setting: AppSettings.hideSpaceAvatarsInDirectChats,
               ),
               SettingsSwitchListTile.adaptive(
                 title: L10n.of(context).hideInvalidOrUnknownMessageFormats,

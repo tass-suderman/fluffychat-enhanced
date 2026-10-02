@@ -14,6 +14,14 @@ and newer compatible distributions, including current Arch Linux. Required
 runtime libraries still need to be installed (your existing FluffyChat AUR
 installation supplies the usual dependencies).
 
+The optional **Settings → Chat → Keep running in the system tray** setting
+adds a tray icon with **Show FluffyChat** and **Exit**. Closing the window hides
+it while messages and notifications continue. The setting is off by default.
+Linux needs an AppIndicator library (`libayatana-appindicator` or
+`libappindicator` on Arch) and a tray host. On Hyprland, enable the `tray` module
+in your panel, such as Waybar. If no tray host exists, the app keeps normal close
+behavior and reports that the setting could not be enabled.
+
 The upstream web/Play Store deployment jobs are restricted to the upstream
 repository, so your fork does not need their deployment secrets.
 
@@ -109,3 +117,26 @@ adb install -r /tmp/fluffychat-android-download/app-debug.apk
 If Android reports incompatible signatures, check that CI uses the key from
 your installed build. Uninstalling the app deletes local app data; export your
 encryption keys before considering that route.
+
+### When an Android update is rejected
+
+The displayed version name can remain the same for a sideloaded update. Android
+checks the application ID, signing certificate and internal version code:
+
+- `INSTALL_FAILED_UPDATE_INCOMPATIBLE` usually means different signing keys.
+  Local debug builds and CI must reuse the same debug keystore; release APKs
+  can use a different key. Increasing the version does not fix this error.
+- `INSTALL_FAILED_VERSION_DOWNGRADE` means the new internal version code is
+  lower. The number after `+` in `pubspec.yaml` supplies this code (currently
+  `3568`), and `flutter build apk --debug --build-number NUMBER` overrides it.
+  Use a higher number for successive releases, and keep local/CI values aligned.
+
+Try `adb install -r app-debug.apk` to obtain the exact error instead of
+uninstalling. To compare two APKs' signing certificates, run the SDK's
+`build-tools/<version>/apksigner verify --print-certs APK_PATH` on each and
+compare the certificate SHA-256 digests. This prints public certificate details,
+not the private signing key. Keep a backup of the shared keystore and configure
+`ANDROID_DEBUG_KEYSTORE_BASE64` before relying on CI builds for updates.
+
+See Android's [signing requirements](https://developer.android.com/studio/publish/app-signing)
+and [versioning rules](https://developer.android.com/studio/publish/versioning).

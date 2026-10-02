@@ -1,4 +1,16 @@
 {
+    "closeToTray": "Keep running in the system tray",
+    "closeToTrayDescription": "Closing the window hides FluffyChat. Use the tray menu to show it again or exit.",
+    "trayShowWindow": "Show FluffyChat",
+    "trayExit": "Exit",
+    "trayUnavailable": "Could not enable the system tray. Check that your desktop panel has a tray enabled.",
+    "showReadReceiptsBesideMessages": "Show read receipts beside messages",
+    "showReadReceiptsBesideMessagesDescription": "Show each person's latest read position beneath their last-read message.",
+    "readBy": "Read by",
+    "hideSpaceAvatars": "Hide space avatars in all chats",
+    "hideSpaceAvatarsDescription": "Show only the room or person's full-size picture in the chat list, without the parent space avatar.",
+    "hideSpaceAvatarsInDirectChats": "Hide space avatars in direct chats",
+    "hideSpaceAvatarsInDirectChatsDescription": "Show only the chat picture for direct chats, including bridged chats, instead of combining it with the space avatar.",
     "editImage": "Edit image",
     "@editImage": {
         "type": "String",

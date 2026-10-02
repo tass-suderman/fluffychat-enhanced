@@ -44,6 +44,7 @@ enum AppSettings<T> {
   sendPublicReadReceipts<bool>('chat.fluffy.send_public_read_receipts', true),
   swipeRightToLeftToReply<bool>('chat.fluffy.swipeRightToLeftToReply', true),
   sendOnEnter<bool>('chat.fluffy.send_on_enter', false),
+  closeToTray<bool>('chat.fluffy.close_to_tray', false),
   displayNavigationRail<bool>('chat.fluffy.display_navigation_rail', false),
   shareKeysWith<String>('chat.fluffy.share_keys_with_2', 'all'),
   noEncryptionWarningShown<bool>(
@@ -80,6 +81,15 @@ enum AppSettings<T> {
   lowPriorityLast<bool>('chat.fluffy.lowPriorityLast', true),
   hiddenSpaces<List<String>>('chat.fluffy.hiddenSpaces', []),
   hideRoomsInSpaces<bool>('chat.fluffy.hideRoomsInSpaces', false),
+  showReadReceiptsBesideMessages<bool>(
+    'chat.fluffy.show_read_receipts_beside_messages',
+    true,
+  ),
+  hideSpaceAvatars<bool>('chat.fluffy.hide_space_avatars', false),
+  hideSpaceAvatarsInDirectChats<bool>(
+    'chat.fluffy.hide_space_avatars_in_direct_chats',
+    false,
+  ),
   showThumbnailsInTimeline<bool>('chat.fluffy.showThumbnailsInTimeline', true),
   doubleTapToReact<bool>('chat.fluffy.double_tap_to_react', false),
   doubleTapReaction<String>('chat.fluffy.double_tap_reaction', '❤️'),

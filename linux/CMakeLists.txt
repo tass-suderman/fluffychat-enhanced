@@ -93,6 +93,14 @@ set_target_properties(${BINARY_NAME}
 # them to the application.
 include(flutter/generated_plugins.cmake)
 
+# tray_manager 0.5.x uses app_indicator_new, deprecated by recent Ayatana
+# headers. Keep this third-party warning visible without failing Arch builds;
+# retain -Werror for our runner and all other diagnostics/plugins.
+if(TARGET tray_manager_plugin)
+  target_compile_options(tray_manager_plugin PRIVATE
+    -Wno-error=deprecated-declarations)
+endif()
+
 
 # === Installation ===
 # By default, "installing" just makes a relocatable bundle in the build

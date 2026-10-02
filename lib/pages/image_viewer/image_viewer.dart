@@ -7,6 +7,7 @@ import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/pages/image_viewer/image_viewer_view.dart';
 import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/utils/show_scaffold_dialog.dart';
+import 'package:fluffychat/widgets/media_viewer_back_handler.dart';
 import 'package:fluffychat/widgets/share_scaffold_dialog.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
@@ -143,5 +144,6 @@ class ImageViewerController extends State<ImageViewer> {
   }
 
   @override
-  Widget build(BuildContext context) => ImageViewerView(this);
+  Widget build(BuildContext context) =>
+      MediaViewerBackHandler(child: ImageViewerView(this));
 }
