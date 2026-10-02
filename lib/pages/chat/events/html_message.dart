@@ -9,6 +9,7 @@ import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/config/themes.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/utils/code_highlight_theme.dart';
+import 'package:fluffychat/utils/emoji_text.dart';
 import 'package:fluffychat/utils/event_checkbox_extension.dart';
 import 'package:fluffychat/widgets/avatar.dart';
 import 'package:fluffychat/widgets/future_loading_dialog.dart';
@@ -144,7 +145,7 @@ class HtmlMessage extends StatelessWidget {
 
   InlineSpan _renderCodeBlockNode(dom.Node node) {
     if (node is! dom.Element) {
-      return TextSpan(text: node.text);
+      return applyLinuxEmojiFont(TextSpan(text: node.text));
     }
     final style =
         atomOneDarkTheme[node.className.split('-').last] ??
@@ -172,11 +173,13 @@ class HtmlMessage extends StatelessWidget {
       // Single linebreak nodes between Elements are ignored:
       if (text == '\n') text = '';
 
-      return LinkifySpan(
-        text: text,
-        options: const LinkifyOptions(humanize: false),
-        linkStyle: linkStyle,
-        onOpen: onOpen,
+      return applyLinuxEmojiFont(
+        LinkifySpan(
+          text: text,
+          options: const LinkifyOptions(humanize: false),
+          linkStyle: linkStyle,
+          onOpen: onOpen,
+        ),
       );
     }
 

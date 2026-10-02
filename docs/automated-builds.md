@@ -14,6 +14,11 @@ and newer compatible distributions, including current Arch Linux. Required
 runtime libraries still need to be installed (your existing FluffyChat AUR
 installation supplies the usual dependencies).
 
+Linux emoji rendering uses installed **Noto Color Emoji** (`noto-fonts-emoji`
+on Arch); explicit VS15 text presentation uses **DejaVu Sans**. These fonts
+resolve through Flutter's Linux engine without changing system fontconfig or
+bundling another font. Other platforms retain their existing font behavior.
+
 The upstream web/Play Store deployment jobs are restricted to the upstream
 repository, so your fork does not need their deployment secrets.
 

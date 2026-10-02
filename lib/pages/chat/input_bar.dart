@@ -8,7 +8,9 @@ import 'package:fluffychat/config/app_config.dart';
 import 'package:fluffychat/config/setting_keys.dart';
 import 'package:fluffychat/l10n/l10n.dart';
 import 'package:fluffychat/pages/chat/trust_user_key_dialog.dart';
+import 'package:fluffychat/utils/emoji_text.dart';
 import 'package:fluffychat/utils/markdown_context_builder.dart';
+import 'package:fluffychat/utils/platform_infos.dart';
 import 'package:fluffychat/widgets/mxc_image.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
@@ -472,6 +474,11 @@ class _InputBarState extends State<InputBar> {
             textScaler: TextScaler.linear(AppSettings.fontSizeFactor.value),
           ),
           child: TextField(
+            style: PlatformInfos.isLinux
+                ? theme.textTheme.bodyLarge?.copyWith(
+                    fontFamilyFallback: linuxEmojiFallback,
+                  )
+                : null,
             controller: controller,
             focusNode: focusNode,
             readOnly: widget.readOnly,
