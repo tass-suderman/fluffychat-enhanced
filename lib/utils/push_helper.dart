@@ -80,6 +80,7 @@ Future<void> pushHelper(
               AppSettings.applicationName.value,
               (notification.counts?.unread ?? 0).toString(),
             ),
+            onlyAlertOnce: AppSettings.notificationAlertOncePerRoom.value,
             importance: Importance.high,
             priority: Priority.max,
             shortcutId: notification.roomId,
@@ -305,6 +306,9 @@ Future<void> _tryPushHelper(
       hideEdit: true,
       removeMarkdown: true,
     ),
+    // Android tracks the existing notification per account and room. Once it
+    // is dismissed or cancelled, the next message can alert again.
+    onlyAlertOnce: AppSettings.notificationAlertOncePerRoom.value,
     importance: Importance.high,
     priority: Priority.max,
     groupKey: client.clientName,

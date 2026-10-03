@@ -70,6 +70,14 @@ class SettingsNotificationsView extends StatelessWidget {
                       title: Text('Last received push notification'),
                       subtitle: Text(lastReceivedPush.toIso8601String()),
                     ),
+                  if (PlatformInfos.isAndroid)
+                    SettingsSwitchListTile.adaptive(
+                      title: L10n.of(context).notificationAlertOncePerRoom,
+                      subtitle: L10n.of(
+                        context,
+                      ).notificationAlertOncePerRoomDescription,
+                      setting: AppSettings.notificationAlertOncePerRoom,
+                    ),
                   if (kIsWeb)
                     SettingsSwitchListTile.adaptive(
                       title: L10n.of(context).playSoundOnNotification,

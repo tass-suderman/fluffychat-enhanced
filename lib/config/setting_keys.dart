@@ -73,6 +73,10 @@ enum AppSettings<T> {
   ),
   tos<String>('chat.fluffy.tos_url', 'https://fluffychat.im/tos'),
   sendTimelineEventTimeout<int>('chat.fluffy.send_timeline_event_timeout', 15),
+  notificationAlertOncePerRoom<bool>(
+    'chat.fluffy.notification_alert_once_per_room',
+    false,
+  ),
   webNotificationSound<bool>('chat.fluffy.web_notification_sound', true),
   chatFilter<String>('chat.fluffy.chat_filter', 'allChats'),
   sortUnreadFirst<bool>('chat.fluffy.sortUnreadFirst', false),

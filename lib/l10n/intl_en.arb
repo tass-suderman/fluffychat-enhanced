@@ -2583,6 +2583,8 @@
     "support": "Support",
     "setLowPriority": "Set low priority",
     "unsetLowPriority": "Unset low priority",
+    "notificationAlertOncePerRoom": "Alert only once per chat",
+    "notificationAlertOncePerRoomDescription": "Play sound and vibrate for the first message in each chat. Further messages are silent until you read or clear that chat’s notification.",
     "playSoundOnNotification": "Play sound on notification",
     "addTag": "Add tag",
     "removeTag": "Remove tag",
